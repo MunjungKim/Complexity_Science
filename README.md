@@ -1,2 +1,3 @@
 # Complexity_Science
-Finding_Ground_Truth
+
+See [Wikipage](https://github.com/MunjungKim/Complexity_Science/wiki) for installation, test, and todos.
