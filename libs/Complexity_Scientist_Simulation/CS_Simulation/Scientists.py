@@ -9,6 +9,10 @@
 
 """
 
+import numpy as np
+import keras
+from keras import layers
+
 
 def sdimlists(dimsvals, return_full=True):
     assert isinstance(dimsvals, list), "Dims and values are not a list!"
@@ -59,7 +63,7 @@ class scientist:
         
         
         
-        def make_observation(self, env, scientist2=None):
+    def make_observation(self, env, scientist2=None):
         
         data = np.array(self.data)
         
@@ -258,13 +262,33 @@ class scientist:
         
         
 class scientist_autoencoder(scientist):
-    def __init__(self, num_param):
+        
+    def __init__(self, max_dimensions, measurement_capacity, exp_control_strategy,
+                experimentation_strategy, measurement_strategy, explanation_strategy,
+                explanation_capacity, num_param, max_dim_value = float('inf')):
         """
         Initializing clustered multivariate gaussian ground truth
 
         Args:
-            num_param : embedding dimension
+            max_dimensions :
+            experimentation_strategy : random, safe, safe_probabilistic, risky, risky_probabilistic, disagreement_sampling, disagreement_sampling_probabilistic, and disagreement_safe_probabilistic
         """
+        self.explanation = None
+        self.data = []
+        self.max_dimensions = max_dimensions # dimensionality of the world!
+        self.max_dim_value = max_dim_value
+        self.minimum_exploration = 0.1
+        self.explanation_strategy = "nn_autoencoder"
+        self.explanation_capacity = explanation_capacity
+        
+        self.dimension_importance_weights = np.ones((self.max_dimensions)) # not normalized
+        # how important are the dimensions to measure
+        # here, the agent is agnostic in the beginning: all the dimensions are equally important
+        
+        self.measurement_capacity = measurement_capacity # max number of dimensions to record at each experiment
+        
+        self.exp_control_strategy = exp_control_strategy
+        self.experimentation_strategy = experimentation_strategy 
         self.num_param : num_param
     
     
@@ -275,6 +299,7 @@ class scientist_autoencoder(scientist):
 
             input_data = keras.Input(shape=(self.max_dimensions,))
             # "encoded" is the encoded representation of the input
+            print(encoding_dim)
             encoded = layers.Dense(encoding_dim, activation='linear')(input_data)
             # "decoded" is the lossy reconstruction of the input
             decoded = layers.Dense(self.max_dimensions, activation='relu')(encoded)
