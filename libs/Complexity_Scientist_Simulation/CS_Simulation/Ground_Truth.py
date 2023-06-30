@@ -124,3 +124,80 @@ class clustered_multivariate_gaussian:
         return self.sample(cluster_probs=posteriors, cond_dims=fixed_dims,
                                                      cond_vals=values,
                                                      return_full=return_full)
+
+
+    
+    
+    
+def find_nearest(array, dim,value):
+    
+    
+    array = np.asarray(array[:,dim])
+    
+    dist = np.linalg.norm(np.abs(array - np.array( value)), axis=1) 
+    idx = dist.argmin()
+    
+    return array[idx]
+
+
+class Based_on_Formula:
+    
+    def __init__(self, data):
+        """
+        Initializing ground truth based on given data
+
+        Args:
+            data : the ground truth dataset (numpy array)
+            max_loc : maximum values of uniform distribution for calculating mean values of the mutlivariate gaussian distribution
+            wishart_scale : the scale of covariance matrix of the wishart dsitribution for getting the covariance martrix for multivariate gaussian distribution
+            num_clusters : number of clusters of multivariate gaussian distribution
+        """
+
+        self.ground_truth = data
+        self.n_dims = data.shape[1]
+        self.n_data = data.shape[0]
+        
+        
+#     def sample(self):
+#         random_index = np.random.choice(len(data), 1)
+
+#         return data[random_index]
+    
+    
+    def sample(self, cluster_probs=None, cond_dims=None, cond_vals=None, return_full=False):
+
+        # idea - pick a random cluster, then sample a value
+        
+        if cond_dims is not None:
+            return self.sample_conditioned(cond_dims, cond_vals, return_full)
+        else:
+            random_index = np.random.choice(len(self.ground_truth), 1)
+            return self.ground_truth[random_index]
+
+    def sample_conditioned(self, fixed_dims, values, return_full=False):
+        """
+        Getting samples with some restrictions 
+
+        Args:
+            fixed_dims: list of the dimension controlled (list)
+            values : the values where the fixed_dims will be fixed (list)
+        """
+        assert len(fixed_dims) < self.n_dims, "Too many fixed dimensions!"
+
+        dims_set = set(fixed_dims)
+        free_dims = [i for i in range(self.n_dims) if i not in dims_set]
+        
+        
+        closet_data = find_nearest(self.ground_truth,fixed_dims,values)
+        
+
+        
+
+        if return_full:
+            return closet_data
+
+        else:
+            return closet_data[fee_dims]
+
+        
+    

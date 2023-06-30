@@ -12,6 +12,15 @@
 import numpy as np
 import keras
 from keras import layers
+from tqdm import tqdm
+from scipy.spatial.distance import cdist
+
+def convert_dimlists(dimsvals, return_full=True):
+    assert isinstance(dimsvals, list), "Dims and values are not a list!"
+
+    return {"cond_dims": None, "cond_vals": None} if not dimsvals else {"cond_dims": np.array(dimsvals[0]),
+                                                                        "cond_vals": np.array(dimsvals[1]),
+                                                                        "return_full": return_full}
 
 
 def sdimlists(dimsvals, return_full=True):
@@ -21,11 +30,11 @@ def sdimlists(dimsvals, return_full=True):
                                                                         "cond_vals": np.array(dimsvals[1]),
                                                                         "return_full": return_full}
 
-def evaluate_performance(scientist, environment, n=1000):
+def evaluate_performance(scientist, environment, n=20):
     score = None
     # how many observations to sample
     ground_truth_sample = []
-    for i in range(n):
+    for i in tqdm(range(n)):
         obs = environment.sample()
         ground_truth_sample.append(obs)
     ground_truth_sample = np.array(ground_truth_sample)
@@ -66,6 +75,7 @@ class scientist:
     def make_observation(self, env, scientist2=None):
         
         data = np.array(self.data)
+        print(data)
         
         # what to measure if there is no data yet
         if len(data) < 10 or np.random.random() < self.minimum_exploration or self.experimentation_strategy == "random": # exploration here!
@@ -219,6 +229,7 @@ class scientist:
             # choosing the control value close to one of the values in target observation
             if self.experimentation_strategy != "none" and self.experimentation_strategy !=  "sampling_the_unknown" and self.exp_control_strategy == "close":                
                 dim_to_control = np.random.choice(np.where(data[target_observation_idx]!=0.)[0])
+                print(dim_to_control)
                 control_value = min(data[target_observation_idx][dim_to_control] + np.random.uniform(-1,1), self.max_dim_value)
             
             
@@ -232,10 +243,12 @@ class scientist:
                 # CHECK THIS
                 data_indices[switch_boolean] = np.random.randint(self.max_dimensions, size = len(data_indices))[switch_boolean]
           
-        raw_observation = np.array(env.sample(**convert_dimlists(experiment_parameters))) # one observation
+        raw_observation = np.array(env.sample(**convert_dimlists(experiment_parameters)))[0] # one observation
+        
         # recording only the dimensions that were measured
         current_observation = np.zeros((len(raw_observation))) # TODO: non-measured dimensions are currently zeros, 
         # check if it can screw up the models
+        
         current_observation[data_indices] = raw_observation[data_indices] #projection
         
         # saving the result
